@@ -1,4 +1,4 @@
-# Multi-SLM Medical Judge — IEEE Big Data 2026
+# Multi-SLM Medical Judge 
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-blue)](https://doi.org/10.5281/zenodo.XXXXXXX)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
