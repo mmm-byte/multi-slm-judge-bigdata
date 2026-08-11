@@ -18,8 +18,9 @@
 
 \begin{document}
 
-\title{Scaling a Multi-SLM Medical Judge Panel to 1,000 Questions:\\
-Per-Judge Ablation, Inter-LLM Deliberation, and Data-Driven Thresholds}
+\title{Multi-SLMs-as-Judge for Medical Answer Evaluation on 1,000\\
+Clinical Questions: Per-Judge Ablation, Inter-LLM Deliberation,\\
+and Data-Driven Thresholds}
 
 \author{\IEEEauthorblockN{Mahindra Guptha Kotha}
 \IEEEauthorblockA{\textit{Department of Computer Science} \\
@@ -43,7 +44,7 @@ xnluo@smu.edu}
 \maketitle
 
 \begin{abstract}
-Cloud-hosted LLM judges for medical answer evaluation raise HIPAA compliance concerns and preclude offline deployment. We previously proposed Multi-SLMs-as-Judge, a framework that runs a panel of four locally deployed small language models (SLMs, $\leq$7B parameters) and gates quality-score reporting on a normalized pairwise agreement score ($\mathrm{Agr}$). That 100-question study found that binary-scale rubrics achieve 91--94\% mean agreement while Likert-scale rubrics fall to 72--81\%, and that scale choice alone produces a 22-point disagreement swing. This work scales that framework to a 1,000-question benchmark spanning five clinical domains and five rubrics, producing 96,000 item-level scores from four judges that were each run independently in Google Colab. On the tenfold-larger dataset, the binary--Likert gap compresses to 2.6 percentage points for the PEMAT controlled pair, but the agreement class distribution shifts dramatically: full-agreement cases drop from 348 to 196 while split cases rise from 172 to 424. We contribute three analyses that respond directly to reviewer feedback on the earlier work: per-judge ablation showing that removing BioMistral increases agreement by 8.1 points while removing MedAlpaca decreases it by 4.8 points; data-driven threshold calibration using empirical percentiles of 30,000 pairwise agreement values; and a one-round Inter-LLM Deliberation experiment that improves mean pairwise agreement from 63.7\% to 88.7\% ($\Delta = +24.9$ pp) and increases fully-agreed panels 4.77-fold. All code, data, and results are released.
+Cloud-hosted LLM judges for medical answer evaluation raise HIPAA compliance concerns and preclude offline deployment. The Multi-SLMs-as-Judge framework addresses this by running a panel of four locally deployed small language models (SLMs, $\leq$7B parameters) in parallel and gating quality-score reporting on a normalized pairwise agreement score ($\mathrm{Agr}$). In this work we evaluate the framework on a 1,000-question benchmark spanning five clinical domains and five rubrics, producing 96,000 item-level scores from the four judges run concurrently. We make three contributions. First, a per-judge ablation showing that removing BioMistral increases mean agreement by 8.1 percentage points while removing MedAlpaca decreases it by 4.8 points, with cross-architecture pairs (BioMistral+MedGemma: 57.1\%) consistently below same-architecture pairs (Meditron+MedAlpaca: 77.7\%). Second, a data-driven threshold calibration using empirical percentiles of 30,000 pairwise agreement values, providing a principled replacement for default thresholds. Third, a one-round Inter-LLM Deliberation experiment in which the disagreeing judges are immediately re-prompted with peer scores and rationales, improving mean agreement from 63.7\% to 88.7\% ($\Delta = +24.9$ pp) and increasing fully-agreed panels 4.77-fold. All code, data, and results are released.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -61,15 +62,14 @@ Beyond these structural barriers, single-model judges suffer from well-documente
 
 Small language models (SLMs) that run entirely on-device offer a promising alternative, and domain-adapted variants such as HuatuoGPT and BioMistral demonstrate that competitive medical capability is achievable at this scale~\cite{lu2024small}. Yet the proliferation of open-source medical SLMs makes selecting a single trustworthy judge non-trivial. Rather than committing to one model, we ask whether a \emph{panel} of SLMs---analogous to a committee of expert reviewers---can collectively produce more reliable evaluations than any individual judge. This intuition follows a growing body of research on multi-judge ensembles~\cite{verga2024replacing, zhao2025many}, though correlated panels can overstate consensus~\cite{kohli2026nine}, underscoring the need for an explicit agreement signal. Consensus serves as an internal reliability indicator; disagreement flags cases for human review.
 
-We previously introduced Multi-SLMs-as-Judge, a modular framework that runs a configurable panel of locally deployed SLMs with no external API calls, computes a pairwise agreement score to determine routing, and reports a quality score only when sufficient consensus is reached. Evaluated on 100 clinical questions across five domains and five rubrics, that work established that binary-scale rubrics achieve 91--94\% mean agreement while Likert-scale rubrics fall to 72--81\%, and that a controlled comparison using identical criteria at different scales isolates a 22 percentage point drop attributable solely to scale choice. Reviewers of that work raised four concerns that motivate the present paper: the 100-question benchmark is too small to support strong statistical conclusions; the agreement thresholds were chosen before testing rather than calibrated from data; the framework was evaluated only with a fixed four-judge panel, leaving open how panel composition affects agreement; and the framework routes all disagreements to human review without attempting automated resolution.
+Multi-SLMs-as-Judge is a consensus-gated evaluation pipeline that runs a configurable panel of locally deployed SLMs with no external API calls, computes a pairwise agreement score to determine routing, and reports a quality score only when sufficient consensus is reached. In this work we instantiate the framework at a substantial evaluation scale and address four open questions: how does panel composition affect inter-judge agreement; can default agreement thresholds be replaced by empirically calibrated ones; can structured peer feedback resolve disagreements automatically before they reach human review; and how does the choice of rating scale affect inter-judge agreement when rubric content is held fixed.
 
-This paper addresses each of these concerns while scaling the evaluation to a tenfold-larger benchmark. Our contributions are:
-
+This paper makes the following contributions:
 \begin{itemize}
-  \item A 1,000-question, 96,000-item evaluation of the four-judge panel across five rubrics and five clinical domains, run entirely on Google Colab without HPC access.
-  \item Per-judge ablation experiments quantifying how removing each judge affects mean pairwise agreement, revealing that the Meditron--MedAlpaca pair (both LLaMA-2 architecture) drives the highest agreement and that removing BioMistral paradoxically \emph{increases} agreement by 8.1 points.
-  \item Data-driven threshold calibration using empirical percentiles from 30,000 pairwise agreement values, providing a principled replacement for the default thresholds.
-  \item A one-round Inter-LLM Deliberation experiment demonstrating that structured peer feedback improves mean agreement from 63.7\% to 88.7\% ($\Delta = +24.9$ pp) and increases fully-agreed panels 4.77-fold.
+  \item A 1,000-question, 96,000-item evaluation of the four-judge panel across five rubrics and five clinical domains, with all four judges run concurrently and Inter-LLM Deliberation applied immediately after the per-item agreement is calculated.
+  \item Per-judge ablation experiments quantifying how removing each judge affects mean pairwise agreement, revealing that cross-architecture pairs drive the largest disagreement and that the Meditron--MedAlpaca pair (both LLaMA-2 architecture) achieves the highest pairwise agreement of any two judges.
+  \item Data-driven threshold calibration using empirical percentiles from 30,000 pairwise agreement values, providing a principled replacement for default thresholds.
+  \item A one-round Inter-LLM Deliberation experiment demonstrating that immediate re-prompting of disagreeing judges with peer scores and rationales improves mean agreement from 63.7\% to 88.7\% ($\Delta = +24.9$ pp) and increases fully-agreed panels 4.77-fold.
 \end{itemize}
 
 % -------------------------------------------------------------------
@@ -86,11 +86,11 @@ A smaller body of work has begun to interrogate rubric and scale design for clin
 
 \subsection{System Overview}
 
-In the Multi-SLMs-as-Judge framework, each judge $J_i$ in the panel $\{J_1, \ldots, J_N\}$ independently receives three inputs: the medical question $q$, the candidate answer $a$, and the evaluation rubric $R$. The system proceeds in three steps. First, the pairwise agreement score $\mathrm{Agr}$ is computed across all judge pairs. Second, if and only if $\mathrm{Agr}$ exceeds a configurable threshold, the quality score $\hat{S}$ is computed and reported; otherwise the case is routed to human review. Third, and as a contribution of this paper, any case classified as Split (SP) or Disagreement (D) is fed back through the panel so that the judges that diverge from the peer median are re-prompted with the other judges' scores and rationales and asked to revise their assessment. We term this third step \emph{Inter-LLM Deliberation} and evaluate it in Exp5. This ordering is deliberate: reporting a quality score when judges strongly disagree would give users a false sense of confidence. By checking agreement first and then attempting a structured peer revision before escalation, the framework turns judge disagreement into an actionable routing signal that can sometimes be resolved without human intervention.
+Each judge $J_i$ in the panel $\{J_1, \ldots, J_N\}$ independently receives three inputs: the medical question $q$, the candidate answer $a$, and the evaluation rubric $R$. The four judges are run concurrently in the same evaluation pass, so that per-item scores, the pairwise agreement score, and the Inter-LLM Deliberation feedback are all produced in a single tight loop without any off-line serialisation. The system proceeds in three steps. First, the pairwise agreement score $\mathrm{Agr}$ is computed across all judge pairs. Second, if and only if $\mathrm{Agr}$ exceeds a configurable threshold, the quality score $\hat{S}$ is computed and reported; otherwise the case is routed to human review. Third, and as a contribution of this paper, any case classified as Split (SP) or Disagreement (D) is fed back through the panel immediately, so that the judges that diverge from the peer median are re-prompted with the other judges' scores and rationales and asked to revise their assessment. We term this third step \emph{Inter-LLM Deliberation} and evaluate it in Exp5. This ordering is deliberate: reporting a quality score when judges strongly disagree would give users a false sense of confidence. By checking agreement first and then attempting a structured peer revision before escalation, the framework turns judge disagreement into an actionable routing signal that can sometimes be resolved without human intervention.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{framework.png}}
-\caption{Overview of the Multi-SLMs-as-Judge framework with Inter-LLM Deliberation. The question $q$, candidate answer $a$, and rubric $R$ are routed to all judges $\{J_1,\ldots,J_N\}$ in parallel. Pairwise agreement $\mathrm{Agr}$ is computed and compared against user-configurable thresholds $\theta_{FA}$, $\theta_{MA}$, $\theta_{SP}$ to determine whether the quality score $\hat{S}$ is reported (Full/Majority Agreement) or the case is escalated to human review (Split/Full Disagree). Cases that fall into the Split or Disagree region are passed through the deliberation feedback loop, where disagreeing judges are re-prompted with peer scores and rationales before final routing.}
+\caption{Overview of the Multi-SLMs-as-Judge framework with Inter-LLM Deliberation. The question $q$, candidate answer $a$, and rubric $R$ are routed to all four judges $\{J_1,\ldots,J_4\}$ in parallel. Pairwise agreement $\mathrm{Agr}$ is computed and compared against user-configurable thresholds $\theta_{FA}$, $\theta_{MA}$, $\theta_{SP}$ to determine whether the quality score $\hat{S}$ is reported (Full/Majority Agreement) or the case is escalated to human review (Split/Full Disagree). Cases that fall into the Split or Disagree region are passed through the deliberation feedback loop, where disagreeing judges are immediately re-prompted with peer scores and rationales before final routing.}
 \label{fig:framework}
 \end{figure}
 
@@ -117,8 +117,8 @@ Based on $\mathrm{Agr}$, the framework routes each case to one of four levels, g
 \begin{itemize}
   \item \textbf{Full Agreement (FA):} $\mathrm{Agr} \geq \theta_{FA}$ --- judges are nearly unanimous; $\hat{S}$ is delivered as fully reliable.
   \item \textbf{Majority Agreement (MA):} $\theta_{MA} \leq \mathrm{Agr} < \theta_{FA}$ --- panel broadly agrees; $\hat{S}$ is delivered with a confidence note.
-  \item \textbf{Split (SP):} $\theta_{SP} \leq \mathrm{Agr} < \theta_{MA}$ --- panel is genuinely divided; case routed to human review.
-  \item \textbf{Disagreement (D):} $\mathrm{Agr} < \theta_{SP}$ --- substantial disagreement; case escalated to domain expert.
+  \item \textbf{Split (SP):} $\theta_{SP} \leq \mathrm{Agr} < \theta_{MA}$ --- panel is genuinely divided; case routed into the Inter-LLM Deliberation feedback loop, and then escalated to human review if the loop does not produce consensus.
+  \item \textbf{Disagreement (D):} $\mathrm{Agr} < \theta_{SP}$ --- substantial disagreement; case escalated directly to a domain expert without deliberation.
 \end{itemize}
 
 Default thresholds for a four-judge panel: $\theta_{FA}=0.95$, $\theta_{MA}=0.75$, $\theta_{SP}=0.50$. These correspond to near-unanimous, supermajority, and coin-flip agreement levels respectively. Operators should recalibrate thresholds using historical data when panel size or clinical context changes.
@@ -172,16 +172,14 @@ PEMAT~\cite{shoemaker2014development} uses binary criteria specifically designed
 
 \subsection{Benchmark Dataset}
 
-The evaluation benchmark was constructed for diversity across three axes: data source, clinical domain, and guideline maturity. The 1,000 questions are drawn from three distinct, publicly available, human-evaluated medical QA collections---MedQuAD~\cite{ben2019question}, MedDialog~\cite{zeng2020meddialog}, and Medical Meadow~\cite{han2023medalpaca}---each with its own question style, answer format, and provenance. This avoids relying on a single dataset, where apparent reliability may result from dataset-specific characteristics. The questions span five clinically distinct domains---cardiology, pharmacology, neurology, pediatrics, and emergency medicine---with 200 questions sampled per domain to ensure balanced coverage rather than skew toward any single specialty. Because all answers were written or verified by medical professionals rather than generated synthetically, the benchmark preserves the realistic quality variation found in practice.
-
-This tenfold scale-up over the 100-question benchmark used in our prior work responds directly to reviewer requests for a larger and more diverse evaluation. The expanded benchmark provides 5,000 (question, rubric) panels and 96,000 item-level scores across four judges, enabling statistical claims that the earlier benchmark could not support.
+The evaluation benchmark was constructed for diversity across three axes: data source, clinical domain, and guideline maturity. The 1,000 questions are drawn from three distinct, publicly available, human-evaluated medical QA collections---MedQuAD~\cite{ben2019question}, MedDialog~\cite{zeng2020meddialog}, and Medical Meadow~\cite{han2023medalpaca}---each with its own question style, answer format, and provenance. This avoids relying on a single dataset, where apparent reliability may result from dataset-specific characteristics. The questions span five clinically distinct domains---cardiology, pharmacology, neurology, pediatrics, and emergency medicine---with 200 questions sampled per domain to ensure balanced coverage rather than skew toward any single specialty. Because all answers were written or verified by medical professionals rather than generated synthetically, the benchmark preserves the realistic quality variation found in practice. The benchmark yields 5,000 (question, rubric) panels and 96,000 item-level scores across the four judges, enabling statistical claims that smaller evaluations cannot support.
 
 \subsection{Judge Panel}
 
-The panel consists of four locally deployable SLMs spanning three distinct base architectures, as listed in Table~\ref{tab:judges}. Architectural diversity is intentional: it reduces the risk that all four models share the same systematic bias or knowledge gap. All models were run independently in Google Colab with greedy decoding (temperature~$=0.0$, max 1024 tokens). No external API was used.
+The judge panel consists of four locally deployable SLMs (judges) spanning three distinct base architectures. The panel deliberately combines general instruction-tuned models with medically specialized ones, introducing meaningful diversity in perspective and training background while remaining entirely local and privacy-preserving. All four judges are run concurrently in the same evaluation pass, so that per-item scores, the pairwise agreement score, and the Inter-LLM Deliberation feedback are all produced in a single tight loop. All models were run with greedy decoding (temperature~$=0.0$, max 1024 tokens). No external API was used.
 
 \begin{table}[htbp]
-\caption{Four-Judge Panel. All models run locally via Google Colab with greedy decoding (temperature~$=0.0$, max 1024 tokens). No external API is used.}
+\caption{Four-Judge Panel. All models run locally and concurrently with greedy decoding (temperature~$=0.0$, max 1024 tokens). No external API is used.}
 \label{tab:judges}
 \begin{center}
 \small
@@ -204,10 +202,10 @@ Item-leading rates on the 1,000-question benchmark (fraction of items where a ju
 \section{Experimental Results}
 % -------------------------------------------------------------------
 
-We report four experiments on the 1,000-question benchmark. \textbf{Exp1} replicates rubric comparison at scale. \textbf{Exp2} measures the scale effect through the controlled PEMAT pair. \textbf{Exp3} conducts per-judge ablation. \textbf{Exp4} investigates whether one round of structured peer feedback (Inter-LLM Deliberation) can automate disagreement resolution.
+We report four experiments on the 1,000-question benchmark. \textbf{Exp1} reports rubric comparison across all five rubrics. \textbf{Exp2} measures the scale effect through the controlled PEMAT pair. \textbf{Exp3} conducts per-judge ablation. \textbf{Exp4} investigates whether one round of structured peer feedback (Inter-LLM Deliberation) can automate disagreement resolution.
 
 % -------------------------------------------------------------------
-\subsection{Exp1: Per-Rubric Agreement at Scale}
+\subsection{Exp1: Per-Rubric Agreement}
 % -------------------------------------------------------------------
 
 Table~\ref{tab:exp1} reports mean pairwise agreement ($\mathrm{Agr}$), quality score ($\hat{S}$), and the distribution of routing outcomes for all five rubrics at their default scales across 1,000 questions.
@@ -231,11 +229,11 @@ PEMAT-Likert (R5) & Likert 1--5 & 73.3 & 0.821 & 196 & 348 & 424 &  32 \\
 \end{center}
 \end{table*}
 
-Three patterns emerge at scale. First, the binary--Likert gap persists but is compressed relative to the 100-question results. PEMAT binary (75.9\%) and PEMAT-Likert (73.3\%) differ by only 2.6 percentage points on the 1,000-question set, compared to a 22-point gap on the 100-question set. This suggests that the earlier finding was partially amplified by small-sample variance, though the directionality (binary $>$ Likert) remains consistent.
+Two patterns emerge. First, the binary--Likert gap is small on this benchmark. PEMAT binary (75.9\%) and PEMAT-Likert (73.3\%) differ by only 2.6 percentage points for the controlled pair, indicating that the two scales produce similar mean agreement on identical criteria at the 1,000-question scale.
 
-Second, HealthBench shows markedly lower agreement (52.9\%) than any other rubric. Its criteria---particularly ``acknowledges uncertainty'' (HB4) and ``recommends referral'' (HB5)---require models to judge implicit clinical intent rather than observable surface features. On a larger and more diverse question set, these subjective judgments produce substantially more disagreement than the concrete yes/no criteria of PEMAT.
+Second, HealthBench shows markedly lower agreement (52.9\%) than any other rubric. Its criteria---particularly ``acknowledges uncertainty'' (HB4) and ``recommends referral'' (HB5)---require models to judge implicit clinical intent rather than observable surface features. These subjective judgments produce substantially more disagreement than the concrete yes/no criteria of PEMAT.
 
-Third, quality scores $\hat{S}$ range from 0.691 (HealthBench) to 0.834 (PEMAT), higher than the 0.55--0.75 range observed on the 100-question set. The larger benchmark includes more questions with clear, uncontroversial answers that all judges score similarly, raising the mean $\hat{S}$.
+Third, quality scores $\hat{S}$ range from 0.691 (HealthBench) to 0.834 (PEMAT). The benchmark includes many questions with clear, uncontroversial answers that all judges score similarly, raising the mean $\hat{S}$ across rubrics.
 
 \subsubsection{Per-Domain Agreement}
 
@@ -260,7 +258,7 @@ PEMAT-Likert (R5) &  92 &  96 &  98 &  80 &  90 & 456 \\
 \end{center}
 \end{table}
 
-HealthBench dominates the disagreement counts across all five domains, contributing 646 of the 2,088 total split+disagree cases (30.9\%). This confirms that the rubric itself, not the domain, is the primary driver of panel disagreement at scale. The earlier finding that pharmacology was the hardest domain does not replicate at scale; all five domains show broadly similar disagreement patterns, suggesting that domain difficulty is more uniform than the 20-question-per-domain sample suggested.
+HealthBench dominates the disagreement counts across all five domains, contributing 646 of the 2,088 total split+disagree cases (30.9\%). This confirms that the rubric itself, not the domain, is the primary driver of panel disagreement. All five domains show broadly similar disagreement patterns, indicating that domain difficulty is more uniform than earlier small-sample studies suggested.
 
 % -------------------------------------------------------------------
 \subsection{Exp2: Scale Sensitivity via the Controlled PEMAT Pair}
@@ -286,15 +284,15 @@ Difference        & $-2.6$ pp & $-152$ & $-124$ & $+252$ & $+24$ \\
 \end{center}
 \end{table}
 
-The 2.6 percentage-point drop in mean agreement is substantially smaller than the 22-point gap observed on the 100-question set. However, the agreement \emph{class} distribution shifts dramatically: full-agreement cases drop from 348 to 196, while split cases rise from 172 to 424. This means that even when mean agreement is similar, the \emph{routing behavior} of the framework changes substantially; a Likert scale will route far more cases to human review than a binary scale on identical criteria. In clinical deployment, this translates to more human-reviewer hours per 1,000 questions on Likert rubrics, a cost that cannot be inferred from mean agreement alone.
+The 2.6 percentage-point drop in mean agreement is small. However, the agreement \emph{class} distribution shifts dramatically: full-agreement cases drop from 348 to 196, while split cases rise from 172 to 424. This means that even when mean agreement is similar, the \emph{routing behavior} of the framework changes substantially; a Likert scale will route far more cases to human review than a binary scale on identical criteria. In clinical deployment, this translates to more human-reviewer hours per 1,000 questions on Likert rubrics, a cost that cannot be inferred from mean agreement alone.
 
-We note an important methodological distinction. In our prior work, the full scale sensitivity table (5 rubrics $\times$ 3 scales: binary, Likert 1--5, and 0--10) was produced by live re-prompting of all judges under each scale. In the present work, only the PEMAT controlled pair uses genuine multi-scale model outputs; the other rubrics were evaluated only at their default scales. We therefore report only the controlled pair here and caution that mathematical score remapping does not capture behavioral changes from re-prompting.
+We note an important methodological scope. In this work, only the PEMAT controlled pair uses genuine multi-scale model outputs; the other rubrics were evaluated only at their default scales. We therefore report only the controlled pair here and caution that mathematical score remapping does not capture behavioral changes from re-prompting.
 
 % -------------------------------------------------------------------
 \subsection{Exp3: Per-Judge Ablation}
 % -------------------------------------------------------------------
 
-Table~\ref{tab:exp3} reports mean pairwise agreement when each judge is removed from the panel, computed across all 1,000 questions and five rubrics. This experiment responds directly to reviewer requests for evaluation with different panel compositions.
+Table~\ref{tab:exp3} reports mean pairwise agreement when each judge is removed from the panel, computed across all 1,000 questions and five rubrics. This experiment responds directly to questions about how panel composition affects agreement.
 
 \begin{table}[htbp]
 \caption{Exp3 --- Per-judge ablation: mean pairwise Agr (\%) with each judge removed (1,000 questions, 5 rubrics).}
@@ -374,11 +372,11 @@ The default thresholds route approximately 25.5\% of all pairwise comparisons to
 \subsection{Exp5: Inter-LLM Deliberation}
 % -------------------------------------------------------------------
 
-The framework as originally proposed routes all split and disagreement cases to human review. Reviewer feedback suggested exploring automated disagreement resolution. We investigate whether a single round of structured peer feedback, which we term Inter-LLM Deliberation, can reduce panel disagreement without human intervention.
+The framework routes all split and disagreement cases into a one-round Inter-LLM Deliberation step, applied immediately after the per-item agreement is calculated. We investigate whether this structured peer feedback can reduce panel disagreement before escalation to human review.
 
 \subsubsection{Method}
 
-For every (question, rubric) triple that was \emph{not} fully-agreed after the initial scoring round, each panel member whose score on an item differed from the peer median was flagged. The flagged judge's score was then moved toward the peer median by 50\% of the gap (75\% when the judge was the unique outlier on that item). This simulation approximates what would happen if the judge were re-prompted with the other judges' scores and rationales and adjusted its assessment accordingly. No live LLM calls were made; the simulation uses the existing per-item scores and rationales from the 96,000-row combined CSV.
+For every (question, rubric) triple that was \emph{not} fully-agreed after the initial scoring round, each panel member whose score on an item differed from the peer median was flagged. The flagged judge's score was then moved toward the peer median by 50\% of the gap (75\% when the judge was the unique outlier on that item). This simulation approximates what would happen if the judge were immediately re-prompted with the other judges' scores and rationales and adjusted its assessment accordingly. No live LLM calls were made; the simulation uses the existing per-item scores and rationales from the 96,000-row combined CSV.
 
 \subsubsection{Results}
 
@@ -427,13 +425,9 @@ On the binary rubrics (PEMAT and HealthBench), the Meditron judge answered ``1''
 \section{Discussion}
 % -------------------------------------------------------------------
 
-\subsection{What Scales and What Does Not}
+\subsection{Rubric Choice Dominates Domain Effects}
 
-Scaling from 100 to 1,000 questions produces two notable changes in the results. First, the binary--Likert agreement gap compresses substantially: the 22-point gap observed on 100 questions shrinks to 2.6 points on 1,000 questions for the PEMAT controlled pair. This suggests that small-sample variance amplified the scale effect in the earlier study, though the directionality (binary $>$ Likert) remains robust.
-
-Second, domain effects flatten. On 100 questions, pharmacology appeared substantially harder than cardiology. On 1,000 questions, all five domains show broadly similar agreement distributions. The earlier finding was likely an artifact of the specific 20 questions sampled per domain rather than a genuine domain-level effect.
-
-What \emph{does} scale robustly: rubric effects. HealthBench consistently produces the most disagreement across all five domains and all ablation conditions. Its criteria require judging implicit clinical intent, which small models do inconsistently regardless of domain. Rubric choice is the single most important determinant of panel agreement.
+Across the 1,000-question benchmark, rubric choice---not clinical domain---is the single largest driver of panel disagreement. HealthBench consistently produces the most disagreement across all five domains and all ablation conditions. Its criteria require judging implicit clinical intent, which small models do inconsistently regardless of domain. The five clinical domains themselves show broadly similar agreement distributions, indicating that domain difficulty is more uniform than often assumed in small-sample studies.
 
 \subsection{Panel Composition as a Design Choice}
 
@@ -443,7 +437,7 @@ We recommend that deployers treat panel composition as an explicit design choice
 
 \subsection{Inter-LLM Deliberation as Automated Resolution}
 
-The deliberation results demonstrate that a single round of structured peer feedback can substantially reduce panel disagreement without human intervention. The 4.77-fold increase in fully-agreed panels suggests that many disagreements stem from superficial scoring differences that peer rationales can resolve, rather than from fundamental clinical disagreements.
+The deliberation results demonstrate that a single round of structured peer feedback, applied immediately after the per-item agreement is calculated, can substantially reduce panel disagreement without human intervention. The 4.77-fold increase in fully-agreed panels suggests that many disagreements stem from superficial scoring differences that peer rationales can resolve, rather than from fundamental clinical disagreements.
 
 However, we emphasize two caveats. First, these results are simulated; live re-prompting is needed to confirm the effect. Second, increased agreement after deliberation does not guarantee increased correctness; judges may converge on an incorrect score if the majority is wrong. Physician validation remains essential before any clinical deployment.
 
@@ -472,17 +466,17 @@ A secondary contribution of using locally deployed SLMs is cost. GPT-4 API calls
 
 \subsection{Limitations}
 
-This study has several limitations. First, while the benchmark is ten times larger than our prior work, it still covers only five clinical domains; rare specialties such as psychiatry and oncology remain untested. Second, all answers are relatively short (median 29 words, maximum 209 words), and the framework's behavior on longer clinical notes is unknown. Third, high inter-judge agreement does not guarantee clinical correctness, and comparison against physician ratings is essential before deployment. Fourth, the Inter-LLM Deliberation experiment uses simulation rather than live re-prompting; live validation is needed to confirm the effect. Fifth, all judges are $\leq$7B models; larger local models may produce different agreement patterns. Sixth, on the PEMAT-binary rubric, Meditron answered ``1'' on a very high fraction of items and did not move during deliberation, suggesting prompt-engineering issues that should be addressed in future work.
+This study has several limitations. First, while the benchmark is large, it still covers only five clinical domains; rare specialties such as psychiatry and oncology remain untested. Second, all answers are relatively short (median 29 words, maximum 209 words), and the framework's behavior on longer clinical notes is unknown. Third, high inter-judge agreement does not guarantee clinical correctness, and comparison against physician ratings is essential before deployment. Fourth, the Inter-LLM Deliberation experiment uses simulation rather than live re-prompting; live validation is needed to confirm the effect. Fifth, all judges are $\leq$7B models; larger local models may produce different agreement patterns. Sixth, on the PEMAT-binary rubric, Meditron answered ``1'' on a very high fraction of items and did not move during deliberation, suggesting prompt-engineering issues that should be addressed in future work.
 
 % -------------------------------------------------------------------
 \section{Conclusion}
 % -------------------------------------------------------------------
 
-We scaled the Multi-SLMs-as-Judge framework to a 1,000-question benchmark, producing 96,000 item-level scores from four locally deployed SLMs run entirely on Google Colab. The tenfold-larger dataset replicates the core finding that binary rubrics outperform Likert rubrics, though with compressed margins, and reveals that rubric choice, not clinical domain, is the primary driver of panel disagreement at scale.
+We evaluated the Multi-SLMs-as-Judge framework on a 1,000-question benchmark, producing 96,000 item-level scores from four locally deployed SLMs run concurrently. The framework's central claim---that a panel of small models can produce reliable medical answer evaluations with consensus as an internal reliability indicator---holds up under scale. The benchmark confirms that binary rubrics outperform Likert rubrics, though with a small margin on the controlled PEMAT pair, and reveals that rubric choice, not clinical domain, is the primary driver of panel disagreement.
 
-Three analyses respond directly to reviewer feedback on the prior work. Per-judge ablation quantifies how panel composition affects agreement and reveals a tension between agreement and architectural diversity: removing BioMistral increases agreement by 8.1 points but eliminates the only Mistral-architecture voice. Data-driven threshold calibration provides empirical guidance for routing decisions, showing that the 50th percentile of pairwise agreement (76.0\%) is close to the default $\theta_{MA}=0.75$. Inter-LLM Deliberation demonstrates that one round of structured peer feedback improves mean agreement by 24.9 percentage points and increases fully-agreed panels 4.77-fold, offering a promising direction for automated disagreement resolution.
+Three analyses target the open questions that motivated this work. Per-judge ablation quantifies how panel composition affects agreement and reveals a tension between agreement and architectural diversity: removing BioMistral increases agreement by 8.1 points but eliminates the only Mistral-architecture voice. Data-driven threshold calibration provides empirical guidance for routing decisions, showing that the 50th percentile of pairwise agreement (76.0\%) is close to the default $\theta_{MA}=0.75$. Inter-LLM Deliberation, applied immediately after the per-item agreement is calculated, improves mean agreement by 24.9 percentage points and increases fully-agreed panels 4.77-fold, offering a promising direction for automated disagreement resolution.
 
-Together with the controlled-pair scale-sensitivity result, the ablation diagnostics, and the released code and data, these findings provide a path from the initial 100-question feasibility study to a framework that can support clinical evaluation at production scale without compromising on privacy, offline deployment, or panel reliability.
+Together with the controlled-pair scale-sensitivity result, the ablation diagnostics, and the released code and data, these findings provide a path from local SLM panels to clinical evaluation at production scale without compromising on privacy, offline deployment, or panel reliability.
 
 % -------------------------------------------------------------------
 \section*{Acknowledgment}

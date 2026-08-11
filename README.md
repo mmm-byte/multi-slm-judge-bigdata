@@ -133,7 +133,7 @@ Default thresholds: θ_FA=0.95, θ_MA=0.75, θ_SP=0.50. Data-driven calibration 
 ## The Five Experiments
 
 ### Exp1: Rubric Comparison at Scale
-Per-rubric agreement analysis across 1,000 questions. Binary rubrics outperform Likert, but the gap is compressed at scale (2.6 pp vs 22 pp on 100 questions). HealthBench shows the most disagreement across all domains.
+Per-rubric agreement analysis across 1,000 questions. Binary rubrics outperform Likert by a small margin on the controlled PEMAT pair (75.9% vs 73.3%, a 2.6 pp gap), with a much larger shift in the agreement class distribution. HealthBench shows the most disagreement across all domains.
 
 ### Exp2: Scoring Scale Sensitivity
 Controlled comparison of PEMAT binary vs PEMAT-Likert. Identical criteria, different scales. The agreement class distribution shifts dramatically even when mean agreement is similar — full-agreement cases drop from 348 to 196 while split cases rise from 172 to 424.

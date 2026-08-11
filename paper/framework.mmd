@@ -1,0 +1,80 @@
+%% Multi-SLMs-as-Judge with Inter-LLM Deliberation (EXP5)
+%% Style: same top-to-bottom flow as the original framework figure.
+%% Only addition: the Split/Disagree branch now loops through the
+%% "Inter-LLM Deliberation" node before reaching human review.
+%%
+%% Render: https://mermaid.live  ->  Actions -> Export PNG (or SVG)
+%% Or from CLI: mmdc -i framework.mmd -o framework.png -w 900 -H 1100 -b white
+
+flowchart TD
+    %% --- inputs (top row, your original) ---------------------------------
+    Q["Question q"]:::input
+    A["Answer a"]:::input
+    R["Rubric R"]:::input
+
+    %% --- judge panel (your original four SLM judges) ---------------------
+    subgraph Panel["Judge Panel (SLMs, run locally)"]
+        direction LR
+        J1["J1"]:::judge
+        J2["J2"]:::judge
+        J3["J3"]:::judge
+        J4["J4"]:::judge
+    end
+
+    %% --- agreement + threshold (your original) --------------------------
+    AGR["Pairwise Agreement\nAgr (Eq. 1)"]:::agr
+    TH{"Agr vs thresholds\ntheta_FA, theta_MA, theta_SP"}:::decision
+
+    %% --- top three outcomes (your original) -----------------------------
+    FA["Full Agreement (FA)\nreport S-hat"]:::fa
+    MA["Majority Agreement (MA)\nreport S-hat w/ note"]:::ma
+
+    %% --- new EXP5 element: deliberation feedback -----------------------
+    %% Only the SP/D branch feeds into it; everything above is unchanged.
+    SP["Split (SP)"]:::sp
+    DELIB["Inter-LLM Deliberation\n(EXP5)\nre-prompt disagreeing\njudges with peer\nscores and rationales"]:::delib
+    D["Disagreement (D)\nhuman review"]:::d
+
+    %% --- main top-to-bottom wiring (your original) ----------------------
+    Q --> J1
+    A --> J1
+    R --> J1
+    Q --> J2
+    A --> J2
+    R --> J2
+    Q --> J3
+    A --> J3
+    R --> J3
+    Q --> J4
+    A --> J4
+    R --> J4
+
+    J1 --> AGR
+    J2 --> AGR
+    J3 --> AGR
+    J4 --> AGR
+
+    AGR --> TH
+
+    TH -->|Agr >= theta_FA| FA
+    TH -->|theta_MA <= Agr < theta_FA| MA
+    TH -->|theta_SP <= Agr < theta_MA| SP
+    TH -->|Agr < theta_SP| D
+
+    %% --- new EXP5 feedback: side loop, returns to judges ----------------
+    SP --> DELIB
+    DELIB -. "revised scores\nre-enter Agr" .-> J1
+    DELIB -. "revised scores\nre-enter Agr" .-> J2
+    DELIB -. "revised scores\nre-enter Agr" .-> J3
+    DELIB -. "revised scores\nre-enter Agr" .-> J4
+
+    %% --- styles: keep your original color scheme ------------------------
+    classDef input   fill:#DCEAFE,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef judge   fill:#FFF1C2,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef agr     fill:#D5F1D8,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef decision fill:#E3E1F9,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef fa      fill:#B7E5C2,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef ma      fill:#FCE5A0,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef sp      fill:#F4B5B5,stroke:#1F2937,stroke-width:1px,color:#0F172A;
+    classDef d       fill:#7F1D1D,stroke:#1F2937,stroke-width:1px,color:#FFFFFF;
+    classDef delib   fill:#FBDCE8,stroke:#9D174D,stroke-width:1.4px,color:#0F172A;
