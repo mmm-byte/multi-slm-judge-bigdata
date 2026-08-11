@@ -181,8 +181,9 @@ The judge panel consists of four locally deployable SLMs (judges) spanning three
 \begin{table}[htbp]
 \caption{Four-Judge Panel. All models run locally and concurrently with greedy decoding (temperature~$=0.0$, max 1024 tokens). No external API is used.}
 \label{tab:judges}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{|l|l|c|}
 \hline
 \textbf{Model} & \textbf{Base Architecture} & \textbf{Params} \\
@@ -193,7 +194,7 @@ Meditron-7B~\cite{chen2023meditron}         & LLaMA-2      & 7B \\
 MedAlpaca-7B~\cite{han2023medalpaca}           & LLaMA-2      & 7B \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
 
 Item-leading rates on the 1,000-question benchmark (fraction of items where a judge gives the highest or tied-for-highest score) are 67.9\% for MedGemma, 40.7\% for BioMistral, 70.9\% for Meditron, and 79.0\% for MedAlpaca. BioMistral is the most conservative scorer; MedAlpaca the most permissive. A judge that leads on a very high fraction of items may inflate agreement statistics, so we recommend tracking leading rates as a panel health diagnostic.
@@ -213,8 +214,9 @@ Table~\ref{tab:exp1} reports mean pairwise agreement ($\mathrm{Agr}$), quality s
 \begin{table*}[t]
 \caption{Exp1 --- Rubric comparison at default scale (1,000 questions, 4-judge panel). Agr = mean pairwise agreement $\pm$ std.\ FA/MA/SP/D = number of cases per routing class out of 1,000.}
 \label{tab:exp1}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lllrrrrr}
 \toprule
 \textbf{Rubric} & \textbf{Scale} & \textbf{Agr\%} & \textbf{$\hat{S}$} & \textbf{FA} & \textbf{MA} & \textbf{SP} & \textbf{D} \\
@@ -226,7 +228,7 @@ Prometheus (R4)   & Likert 1--5 & 65.6 & 0.707 & 130 & 383 & 477 &  10 \\
 PEMAT-Likert (R5) & Likert 1--5 & 73.3 & 0.821 & 196 & 348 & 424 &  32 \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table*}
 
 Two patterns emerge. First, the binary--Likert gap is small on this benchmark. PEMAT binary (75.9\%) and PEMAT-Likert (73.3\%) differ by only 2.6 percentage points for the controlled pair, indicating that the two scales produce similar mean agreement on identical criteria at the 1,000-question scale.
@@ -242,8 +244,9 @@ Table~\ref{tab:exp1_detail} reports agreement class distributions per rubric per
 \begin{table}[htbp]
 \caption{Exp1 --- Split + Full Disagree counts per rubric per domain (1,000 questions per domain, 5 rubrics).}
 \label{tab:exp1_detail}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{|l|r|r|r|r|r|r|}
 \hline
 \textbf{Rubric} & \textbf{Card} & \textbf{Phar} & \textbf{Neur} & \textbf{Ped} & \textbf{Emer} & \textbf{Total} \\
@@ -255,7 +258,7 @@ Prometheus (R4)   & 108 &  91 & 112 &  81 &  95 & 487 \\
 PEMAT-Likert (R5) &  92 &  96 &  98 &  80 &  90 & 456 \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
 
 HealthBench dominates the disagreement counts across all five domains, contributing 646 of the 2,088 total split+disagree cases (30.9\%). This confirms that the rubric itself, not the domain, is the primary driver of panel disagreement. All five domains show broadly similar disagreement patterns, indicating that domain difficulty is more uniform than earlier small-sample studies suggested.
@@ -269,8 +272,9 @@ Table~\ref{tab:exp2} reports the controlled comparison between PEMAT binary (R1)
 \begin{table}[htbp]
 \caption{Exp2 --- PEMAT scale sensitivity (controlled pair, 1,000 questions).}
 \label{tab:exp2}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{|l|r|r|r|r|r|}
 \hline
 \textbf{Scale} & \textbf{Agr\%} & \textbf{FA} & \textbf{MA} & \textbf{SP} & \textbf{D} \\
@@ -281,7 +285,7 @@ PEMAT Likert 1--5 & 73.3 & 196 & 348 & 424 & 32 \\
 Difference        & $-2.6$ pp & $-152$ & $-124$ & $+252$ & $+24$ \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
 
 The 2.6 percentage-point drop in mean agreement is small. However, the agreement \emph{class} distribution shifts dramatically: full-agreement cases drop from 348 to 196, while split cases rise from 172 to 424. This means that even when mean agreement is similar, the \emph{routing behavior} of the framework changes substantially; a Likert scale will route far more cases to human review than a binary scale on identical criteria. In clinical deployment, this translates to more human-reviewer hours per 1,000 questions on Likert rubrics, a cost that cannot be inferred from mean agreement alone.
@@ -297,11 +301,12 @@ Table~\ref{tab:exp3} reports mean pairwise agreement when each judge is removed 
 \begin{table}[htbp]
 \caption{Exp3 --- Per-judge ablation: mean pairwise Agr (\%) with each judge removed (1,000 questions, 5 rubrics).}
 \label{tab:exp3}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{|l|r|r|r|r|r|r|}
 \hline
-\textbf{Panel} & \textbf{PEMAT} & \textbf{HealthB} & \textbf{ClinEval} & \textbf{Prometh} & \textbf{PEMAT-L} & \textbf{Mean} \\
+\textbf{Panel} & \textbf{R1} & \textbf{R2} & \textbf{R3} & \textbf{R4} & \textbf{R5} & \textbf{Mean} \\
 \hline
 All 4 judges      & 75.9 & 52.9 & 70.0 & 65.6 & 73.3 & 67.5 \\
 w/o biomistral    & 79.5 & 67.7 & 86.5 & 66.0 & 78.3 & 75.6 \\
@@ -310,8 +315,10 @@ w/o meditron      & 75.0 & 45.8 & 65.7 & 71.6 & 69.3 & 65.5 \\
 w/o medalpaca     & 70.7 & 48.0 & 64.5 & 60.8 & 69.5 & 62.7 \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
+
+\noindent\textit{R1=PEMAT, R2=HealthBench, R3=ClinicalEval, R4=Prometheus, R5=PEMAT-Likert.}
 
 Removing BioMistral \emph{increases} mean agreement from 67.5\% to 75.6\%---an 8.1 percentage-point gain. BioMistral is the most conservative scorer (item-leading rate: 40.7\%) and its scores frequently diverge from the other three judges, making it the primary source of disagreement. Removing it produces a more homogeneous panel with higher agreement, but at the cost of architectural diversity: the remaining panel (MedGemma, Meditron, MedAlpaca) loses the only Mistral-architecture judge.
 
@@ -322,8 +329,9 @@ Removing MedAlpaca \emph{decreases} mean agreement to 62.7\%, the lowest of any 
 \begin{table}[htbp]
 \caption{Mean pairwise agreement (\%) between judge pairs across 1,000 questions and 5 rubrics.}
 \label{tab:pairs}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{|l|r|r|r|r|}
 \hline
 & \textbf{BioMistral} & \textbf{MedGemma} & \textbf{Meditron} & \textbf{MedAlpaca} \\
@@ -334,7 +342,7 @@ Meditron    & 59.0 & 72.0 & ---  & 77.7 \\
 MedAlpaca   & 62.2 & 77.1 & 77.7 & --- \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
 
 The highest agreement occurs between Meditron and MedAlpaca (77.7\%, both LLaMA-2 architectures). The lowest occurs between BioMistral (Mistral) and MedGemma (Gemma-3) at 57.1\%. Cross-architecture pairs consistently show lower agreement than same-architecture pairs, confirming that architectural diversity is a meaningful source of panel disagreement and, by implication, a meaningful source of evaluation robustness.
@@ -352,8 +360,9 @@ The distribution of pairwise agreement values has mean 67.5\% (std 27.7\%), with
 \begin{table}[htbp]
 \caption{Exp4 --- Agreement class distribution under candidate thresholds (30,000 pairwise values).}
 \label{tab:exp4}
-\begin{center}
+\begin{flushleft}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{|l|r|r|r|r|}
 \hline
 \textbf{Thresholds ($\theta_{FA},\theta_{MA},\theta_{SP}$)} & \textbf{FA\%} & \textbf{MA\%} & \textbf{SP\%} & \textbf{FD\%} \\
@@ -363,7 +372,7 @@ Relaxed (0.90, 0.70, 0.45) & 25.2 & 30.0 & 20.0 & 24.7 \\
 Strict   (0.95, 0.80, 0.55) & 22.7 & 20.0 & 27.5 & 29.8 \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
 
 The default thresholds route approximately 25.5\% of all pairwise comparisons to the ``full disagree'' category and 22.7\% to ``full agree.'' Relaxing $\theta_{FA}$ to 0.90 and $\theta_{MA}$ to 0.70 modestly increases the full-agreement rate to 25.2\% while reducing the disagreement rate to 24.7\%. We recommend that deployers calibrate thresholds using historical data from their specific clinical context rather than adopting defaults; the per-domain split rates in Table~\ref{tab:exp1_detail} provide an empirical prior for this tuning.
@@ -383,20 +392,23 @@ For every (question, rubric) triple that was \emph{not} fully-agreed after the i
 \begin{table}[htbp]
 \caption{Exp5 --- Agreement class transition after one round of Inter-LLM Deliberation (5,000 panels).}
 \label{tab:exp5}
-\begin{center}
+\begin{flushleft}
 \small
-\begin{tabular}{|l|r|r|r|}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|l|r|r|r|r|r|r|r|r|}
 \hline
-\textbf{Rubric} & \textbf{Before} FA/MA/SP/D & \textbf{After} FA/MA/SP/D & \textbf{Improved} \\
+& \multicolumn{4}{c|}{\textbf{Before}} & \multicolumn{4}{c|}{\textbf{After}} \\
+\cline{2-9}
+\textbf{Rubric} & \textbf{FA} & \textbf{MA} & \textbf{SP} & \textbf{D} & \textbf{FA} & \textbf{MA} & \textbf{SP} & \textbf{D} \\
 \hline
-PEMAT (R1)        & 491/365/144/0   & 884/0/116/0     & 393 \\
-HealthBench (R2)  & 26/398/534/42  & 449/178/354/19  & 521 \\
-ClinicalEval (R3) & 47/605/329/19  & 460/323/217/0  & 528 \\
-Prometheus (R4)   & 17/340/490/153 & 618/149/233/0  & 783 \\
-PEMAT-Likert (R5) & 105/401/430/64 & 859/56/85/0    & 811 \\
+PEMAT (R1)        & 491 & 365 & 144 &   0 & 884 &   0 & 116 &  0 \\
+HealthBench (R2)  &  26 & 398 & 534 &  42 & 449 & 178 & 354 & 19 \\
+ClinicalEval (R3) &  47 & 605 & 329 &  19 & 460 & 323 & 217 &  0 \\
+Prometheus (R4)   &  17 & 340 & 490 & 153 & 618 & 149 & 233 &  0 \\
+PEMAT-Likert (R5) & 105 & 401 & 430 &  64 & 859 &  56 &  85 &  0 \\
 \hline
 \end{tabular}
-\end{center}
+\end{flushleft}
 \end{table}
 
 Across all 5,000 (question, rubric) panels, 48.9\% of items were flagged for deliberation. Mean pairwise agreement rose from 63.7\% to 88.7\% ($\Delta = +24.9$ pp), and the number of fully-agreed panels increased from 686 to 3,270 (a 4.77-fold increase). Panels improved their agreement class on 3,036 of 5,000 triples (60.7\%).
