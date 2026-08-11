@@ -1,0 +1,18 @@
+{
+  "dataset_path": "/Users/mahindragupthakotha/Git Repo/Multi_LLM_Medical_AI_Judge_copy/benchmark_dataset/1000_questions_dataset.csv",
+  "total": 1000,
+  "domain_counts": {
+    "Cardiology": 200,
+    "Emergency": 200,
+    "Neurology": 200,
+    "Pediatrics": 200,
+    "Pharmacology": 200
+  },
+  "source_counts": {
+    "MedQuAD": 334,
+    "medical_meadow_health_advice": 333,
+    "en-train": 267,
+    "en-test": 38,
+    "en-dev": 28
+  }
+}
