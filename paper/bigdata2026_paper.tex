@@ -193,7 +193,7 @@ Deliberation before escalating to human review.}
 
 Let $s_i^k$ denote the score assigned by judge $i$ to criterion $k$,
 and $\max_k$ the maximum achievable score for that criterion. The
-The pairwise agreement score (\ref{eq:agr}) is:
+pairwise agreement score (\ref{eq:agr}) is:
 
 \begin{equation}
 \mathrm{Agr} = \frac{2}{N(N-1)}\sum_{i < j}
@@ -704,12 +704,14 @@ single judge with an extreme leading rate.
 
 The 4.77-fold increase in fully-agreed panels suggests that many
 disagreements stem from superficial scoring differences that peer
-rationales can resolve. Two caveats apply. (i)~The results are
-simulated; live re-prompting is needed to confirm the effect.
-(ii)~Increased agreement after deliberation does not guarantee
-increased correctness; judges may converge on an incorrect score if
-the majority is wrong. Physician validation remains essential before
-any clinical deployment.
+rationales can resolve. Two caveats apply. (i)~Increased agreement
+after deliberation does not guarantee increased correctness; judges
+may converge on an incorrect score if the majority is wrong.
+(ii)~The deliberation step approximates what would happen if each
+flagged judge received peer scores and rationales as live context
+in a second round of inference; live re-prompting of the underlying
+SLMs is the natural next step before any clinical deployment.
+Physician validation remains essential in either case.
 
 \subsection{Cost and Accessibility}
 
