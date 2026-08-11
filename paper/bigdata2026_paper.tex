@@ -51,7 +51,7 @@ the framework on a 1,000-question benchmark spanning five clinical
 domains (cardiology, pharmacology, neurology, pediatrics, emergency)
 and five rubrics, producing 96,000 item-level scores. We report five
 experiments. Exp1 compares rubrics: binary rubrics achieve 53--76\%
-mean agreement, Likert rubrics 66--73\%. Exp2 isolates the scale effect
+mean agreement, Likert rubrics 66--74\%. Exp2 isolates the scale effect
 on a controlled PEMAT pair: the binary--Likert mean-agreement gap is
 2.6 pp, but the routing-class distribution shifts dramatically
 (FA cases drop from 348 to 196, SP cases rise from 172 to 424).
@@ -651,11 +651,12 @@ simulation establishes a lower bound on the deliberation effect
 because every flagged item is forced to move at least partway toward
 the peer median; live re-prompting would likely produce smaller but
 still positive gains. On the binary rubrics (PEMAT and HealthBench),
-the Meditron judge answered ``1'' on a high fraction of items in
-Round 1 and cannot move in Round 2; the reported gains on R1 and R2
-are driven by the other three judges moving toward Meditron, not by
-Meditron learning from the panel. A re-run with a corrected Meditron
-prompt is in progress.
+the Meditron judge scored 100\% of PEMAT items (5{,}000/5{,}000) and
+93.7\% of HealthBench items (4{,}685/5{,}000) as ``1'' in Round 1
+and has no room to move upward in Round 2; the reported gains on R1
+and R2 are driven by the other three judges moving toward Meditron,
+not by Meditron learning from the panel. A re-run with a corrected
+Meditron prompt is in progress.
 
 % -------------------------------------------------------------------
 \section{Discussion}
