@@ -695,11 +695,17 @@ any clinical deployment.
 \subsection{Cost and Accessibility}
 
 A secondary contribution of using locally deployed SLMs is cost.
-GPT-4 API calls, at OpenAI's published API rates~\cite{openai2026pricing},
-would cost roughly \$16 per 1,000 questions per judge, or \$65 for a
-four-judge panel, on the prompts used in this study. The local SLM
-panel incurs no per-call API cost, which makes the framework
-accessible to resource-constrained clinical settings.
+Using GPT-4o at OpenAI's published rates of \$2.50 per million input
+tokens and \$10.00 per million output tokens~\cite{openai2026pricing},
+and assuming approximately 2,000 input tokens and 300 output tokens
+per judge call (rubric + question + answer in, structured score out),
+a single judge call costs about \$0.008. Evaluating 1,000 questions
+with one GPT-4o judge therefore costs roughly \$8, and the full
+four-judge panel costs about \$32 per rubric pass. Running all five
+rubrics through a four-judge GPT-4o panel on the 1,000-question
+benchmark therefore costs on the order of \$160 in API fees alone.
+The local SLM panel incurs no per-call API cost, which makes the
+framework accessible to resource-constrained clinical settings.
 
 % -------------------------------------------------------------------
 \section{Conclusion}
