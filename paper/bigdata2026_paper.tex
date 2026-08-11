@@ -687,11 +687,16 @@ copies of one model is equivalent to one model with a redundant
 across three distinct base architectures (Gemma-3, Mistral-DARE,
 and LLaMA-2) precisely so that any single failure mode---training
 data gap, prompt sensitivity, hallucination tendency---is unlikely
-to recur in all four judges at once. The Exp3 ablation confirms
-this: removing BioMistral (the only Mistral-architecture voice)
-raises agreement by 8.1 pp but eliminates the disagreement signal
-that flags hard cases; removing MedAlpaca lowers agreement by 4.8
-pp but exposes cross-architecture disagreement that may be
+to recur in all four judges at once. The judge-pair agreement
+matrix in Table~\ref{tab:pairs} supports this: same-architecture
+pairs agree most strongly (Meditron and MedAlpaca, both LLaMA-2,
+reach 77.7\%), while cross-architecture pairs such as
+BioMistral--MedGemma fall to 57.1\%---a 20.6 pp gap that quantifies
+the architectural-diversity signal. The Exp3 ablation confirms the
+practical consequence: removing BioMistral (the only Mistral-architecture
+voice) raises agreement by 8.1 pp but eliminates the disagreement
+signal that flags hard cases; removing MedAlpaca lowers agreement by
+4.8 pp but exposes cross-architecture disagreement that may be
 clinically meaningful. A well-calibrated panel should show moderate
 agreement, architectural diversity in its disagreeing pairs, and no
 single judge with an extreme leading rate.
