@@ -1,80 +1,88 @@
 %% Multi-SLMs-as-Judge with Inter-LLM Deliberation (EXP5)
 %% Style: same top-to-bottom flow as the original framework figure.
-%% Only addition: the Split/Disagree branch now loops through the
+%% Vertical judge stack, three threshold diamonds, four outcomes.
+%% Only addition: the Split/Disagree branch loops through the
 %% "Inter-LLM Deliberation" node before reaching human review.
 %%
 %% Render: https://mermaid.live  ->  Actions -> Export PNG (or SVG)
-%% Or from CLI: mmdc -i framework.mmd -o framework.png -w 900 -H 1100 -b white
+%% Or from CLI: mmdc -i framework.mmd -o framework.png -w 1000 -H 1200 -b white
 
 flowchart TD
-    %% --- inputs (top row, your original) ---------------------------------
-    Q["Question q"]:::input
-    A["Answer a"]:::input
-    R["Rubric R"]:::input
+    %% Define style classes
+    classDef input_block fill:#ffffff,stroke:#4caf50,stroke-width:1px,stroke-dasharray: 5 5,color:#000000
+    classDef inner_input fill:#e8f5e9,stroke:#4caf50,stroke-width:1px,color:#000000
+    classDef judges_block fill:#f8f9fa,stroke:#ced4da,stroke-width:1px,rx:5,ry:5,color:#000000
+    classDef j_node fill:#ede7f6,stroke:#5e35b1,stroke-width:1px,rx:5,ry:5,color:#000000
+    classDef calculation_node fill:#fff8e1,stroke:#ffb300,stroke-width:1px,rx:5,ry:5,color:#000000
+    classDef diamond_node fill:#fff8e1,stroke:#ffb300,stroke-width:1px,color:#000000
+    classDef delib_node fill:#fbdce8,stroke:#9D174D,stroke-width:1.4px,rx:5,ry:5,color:#000000
+    classDef leafy_green fill:#e8f5e9,stroke:#4caf50,stroke-width:1px,rx:5,ry:5,color:#000000
+    classDef leafy_red fill:#ffebee,stroke:#e53935,stroke-width:1px,rx:5,ry:5,color:#000000
 
-    %% --- judge panel (your original four SLM judges) ---------------------
-    subgraph Panel["Judge Panel (SLMs, run locally)"]
+    %% --- Model Inputs (Horizontal) ---
+    subgraph Inputs [" "]
         direction LR
-        J1["J1"]:::judge
-        J2["J2"]:::judge
-        J3["J3"]:::judge
-        J4["J4"]:::judge
+        InputQ["Question q + Answer a"]:::inner_input
+        InputR["Rubric R"]:::inner_input
     end
+    Inputs:::input_block
 
-    %% --- agreement + threshold (your original) --------------------------
-    AGR["Pairwise Agreement\nAgr (Eq. 1)"]:::agr
-    TH{"Agr vs thresholds\ntheta_FA, theta_MA, theta_SP"}:::decision
+    %% --- Judges (Vertical Stack) ---
+    subgraph Judges [" "]
+        direction TB
+        J1["J1"]:::j_node
+        J2["J2"]:::j_node
+        Jellipses["..."]:::j_node
+        J4["J4"]:::j_node
+    end
+    Judges:::judges_block
 
-    %% --- top three outcomes (your original) -----------------------------
-    FA["Full Agreement (FA)\nreport S-hat"]:::fa
-    MA["Majority Agreement (MA)\nreport S-hat w/ note"]:::ma
+    %% --- Process Nodes ---
+    PairwiseCalculation["Pairwise Agreement (Agr)<br/>Calculation"]:::calculation_node
 
-    %% --- new EXP5 element: deliberation feedback -----------------------
-    %% Only the SP/D branch feeds into it; everything above is unchanged.
-    SP["Split (SP)"]:::sp
-    DELIB["Inter-LLM Deliberation\n(EXP5)\nre-prompt disagreeing\njudges with peer\nscores and rationales"]:::delib
-    D["Disagreement (D)\nhuman review"]:::d
+    DiamondFA{"Agr >= theta_FA"}:::diamond_node
+    QualityScoreGeneration["Quality Score (S)<br/>Generation"]:::calculation_node
 
-    %% --- main top-to-bottom wiring (your original) ----------------------
-    Q --> J1
-    A --> J1
-    R --> J1
-    Q --> J2
-    A --> J2
-    R --> J2
-    Q --> J3
-    A --> J3
-    R --> J3
-    Q --> J4
-    A --> J4
-    R --> J4
+    DiamondMA{"Agr >= theta_MA"}:::diamond_node
+    DiamondSP{"Agr >= theta_SP"}:::diamond_node
 
-    J1 --> AGR
-    J2 --> AGR
-    J3 --> AGR
-    J4 --> AGR
+    %% --- EXP5 Inter-LLM Deliberation (new) ------------------------------
+    DELIB["Inter-LLM Deliberation (EXP5)<br/>Re-prompt disagreeing<br/>judges with peer<br/>scores and rationales"]:::delib_node
 
-    AGR --> TH
+    %% --- Outcomes -------------------------------------------------------
+    FullAgreement["Full Agreement<br/>S + Analysis Note"]:::leafy_green
+    MajorityAgree["Majority Agree<br/>S + Analysis Note"]:::leafy_green
 
-    TH -->|Agr >= theta_FA| FA
-    TH -->|theta_MA <= Agr < theta_FA| MA
-    TH -->|theta_SP <= Agr < theta_MA| SP
-    TH -->|Agr < theta_SP| D
+    SplitPanel["Split Panel<br/>Analysis Note +<br/>Suggest Human Review"]:::leafy_red
+    FullDisagree["Full Disagree<br/>Analysis Note +<br/>Trigger Human Review"]:::leafy_red
 
-    %% --- new EXP5 feedback: side loop, returns to judges ----------------
-    SP --> DELIB
-    DELIB -. "revised scores\nre-enter Agr" .-> J1
-    DELIB -. "revised scores\nre-enter Agr" .-> J2
-    DELIB -. "revised scores\nre-enter Agr" .-> J3
-    DELIB -. "revised scores\nre-enter Agr" .-> J4
+    %% --- Connections ----------------------------------------------------
+    %% Inputs -> Judges (all judges receive all inputs in parallel)
+    Inputs --> Judges
+    %% Judges -> Pairwise Calculation
+    Judges --> PairwiseCalculation
+    PairwiseCalculation --> DiamondFA
 
-    %% --- styles: keep your original color scheme ------------------------
-    classDef input   fill:#DCEAFE,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef judge   fill:#FFF1C2,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef agr     fill:#D5F1D8,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef decision fill:#E3E1F9,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef fa      fill:#B7E5C2,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef ma      fill:#FCE5A0,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef sp      fill:#F4B5B5,stroke:#1F2937,stroke-width:1px,color:#0F172A;
-    classDef d       fill:#7F1D1D,stroke:#1F2937,stroke-width:1px,color:#FFFFFF;
-    classDef delib   fill:#FBDCE8,stroke:#9D174D,stroke-width:1.4px,color:#0F172A;
+    %% FA Decision: pass -> Quality Score Generation; fail -> MA diamond
+    DiamondFA ==>|yes| QualityScoreGeneration
+    DiamondFA -->|no| DiamondMA
+
+    %% MA Decision: pass -> Quality Score Generation; fail -> SP diamond
+    DiamondMA ==>|yes| QualityScoreGeneration
+    DiamondMA -->|no| DiamondSP
+
+    %% Quality Score Generation -> two green outcomes
+    QualityScoreGeneration ==> FullAgreement
+    QualityScoreGeneration ==> MajorityAgree
+
+    %% SP Decision: pass -> Split Panel (still leaves room for agreement);
+    %% fail -> Full Disagree
+    DiamondSP ==>|yes| SplitPanel
+    DiamondSP ==>|no| FullDisagree
+
+    %% EXP5: SP and D cases feed into the deliberation node, which
+    %% re-prompts the disagreeing judges and loops the revised scores
+    %% back into the Pairwise Calculation.
+    SplitPanel  -. "SP cases re-prompted" .-> DELIB
+    FullDisagree -. "D cases re-prompted"  .-> DELIB
+    DELIB -. "revised scores<br/>re-enter Agr" .-> PairwiseCalculation
