@@ -673,10 +673,25 @@ panel disagreement.
 
 \subsection{Panel Composition as a Design Choice}
 
-The ablation reveals a tension between agreement and diversity.
-Removing BioMistral raises agreement by 8.1 pp but eliminates the
-only Mistral-architecture voice. Removing MedAlpaca lowers agreement
-by 4.8 pp but exposes cross-architecture disagreement that may be
+A natural alternative to our four-model panel would be to call a
+single high-capability model such as GPT-4o four times on the same
+question. We deliberately do not recommend this. Calling the same
+closed-source model with identical weights and similar prompts tends
+to produce redundant outputs, both because request caches collapse
+near-identical prompts and because the model's representations are
+stable across calls, so any systematic bias or hallucination pattern
+repeats four times and panel agreement becomes an unreliable signal.
+Diverse disagreement is the whole point of a panel; a panel of
+copies of one model is equivalent to one model with a redundant
+\$0.024 bill per question. The four SLMs in our panel were chosen
+across three distinct base architectures (Gemma-3, Mistral-DARE,
+and LLaMA-2) precisely so that any single failure mode---training
+data gap, prompt sensitivity, hallucination tendency---is unlikely
+to recur in all four judges at once. The Exp3 ablation confirms
+this: removing BioMistral (the only Mistral-architecture voice)
+raises agreement by 8.1 pp but eliminates the disagreement signal
+that flags hard cases; removing MedAlpaca lowers agreement by 4.8
+pp but exposes cross-architecture disagreement that may be
 clinically meaningful. A well-calibrated panel should show moderate
 agreement, architectural diversity in its disagreeing pairs, and no
 single judge with an extreme leading rate.
@@ -699,13 +714,17 @@ Using GPT-4o at OpenAI's published rates of \$2.50 per million input
 tokens and \$10.00 per million output tokens~\cite{openai2026pricing},
 and assuming approximately 2,000 input tokens and 300 output tokens
 per judge call (rubric + question + answer in, structured score out),
-a single judge call costs about \$0.008. Evaluating 1,000 questions
-with one GPT-4o judge therefore costs roughly \$8, and the full
-four-judge panel costs about \$32 per rubric pass. Running all five
-rubrics through a four-judge GPT-4o panel on the 1,000-question
-benchmark therefore costs on the order of \$160 in API fees alone.
-The local SLM panel incurs no per-call API cost, which makes the
-framework accessible to resource-constrained clinical settings.
+a single judge call costs about \$0.008. As a counterfactual, if a
+deployer were to substitute one GPT-4o judge for one SLM judge while
+keeping the other three positions as locally deployed SLMs, the
+additional API cost for one rubric pass over 1,000 questions is
+roughly \$8, and about \$40 across all five rubrics. Calling the
+same GPT-4o four times in place of four SLMs would nominally cost
+the same \$32 per rubric pass, but as discussed above that
+configuration provides no panel diversity and would defeat the
+purpose of inter-judge agreement. The local SLM panel incurs no
+per-call API cost, which makes the framework accessible to
+resource-constrained clinical settings.
 
 % -------------------------------------------------------------------
 \section{Conclusion}
