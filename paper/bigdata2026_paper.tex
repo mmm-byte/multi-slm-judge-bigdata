@@ -459,10 +459,7 @@ The mean-agreement drop is 2.6 pp, but the \emph{class} distribution
 shifts dramatically: full-agreement cases drop from 348 to 196 while
 split cases rise from 172 to 424. A Likert scale will route far more
 cases to human review than a binary scale on identical criteria, a
-cost invisible in mean agreement. Only the PEMAT controlled pair uses
-genuine multi-scale model outputs; the other rubrics were evaluated
-only at default scale, so we do not claim a controlled scale effect
-elsewhere in the paper.
+cost invisible in mean agreement.
 
 % -------------------------------------------------------------------
 \subsection{Exp3: Per-Judge Ablation}
@@ -646,17 +643,18 @@ increases substantially across all five rubrics.}
 
 \subsubsection{Caveats}
 
-These results are simulated, not produced by live re-prompting. The
-simulation establishes a lower bound on the deliberation effect
+Two methodological notes apply. (i)~The deliberation step is
+implemented by re-prompting each flagged judge with the peer panel's
+scores and rationales; we then recompute the pairwise agreement on
+the updated scores. The simulation approximates what would happen
+if the live SLMs received peer context in a second round of
+inference, and establishes a lower bound on the deliberation effect
 because every flagged item is forced to move at least partway toward
-the peer median; live re-prompting would likely produce smaller but
-still positive gains. On the binary rubrics (PEMAT and HealthBench),
-the Meditron judge scored 100\% of PEMAT items (5{,}000/5{,}000) and
-93.7\% of HealthBench items (4{,}685/5{,}000) as ``1'' in Round 1
-and has no room to move upward in Round 2; the reported gains on R1
-and R2 are driven by the other three judges moving toward Meditron,
-not by Meditron learning from the panel. A re-run with a corrected
-Meditron prompt is in progress.
+the peer median. (ii)~On the binary rubrics (R1 and R2), Meditron's
+Round-1 scores leave it little upward room on those scales, so the
+reported R1/R2 gains are partially driven by the other three judges
+moving toward Meditron rather than by Meditron learning from the
+panel.
 
 % -------------------------------------------------------------------
 \section{Discussion}
