@@ -89,6 +89,12 @@ A smaller body of work has begun to interrogate rubric and scale design for clin
 In the Multi-SLMs-as-Judge framework, each judge $J_i$ in the panel $\{J_1, \ldots, J_N\}$ independently receives three inputs: the medical question $q$, the candidate answer $a$, and the evaluation rubric $R$. The system proceeds in two strictly ordered steps. First, the pairwise agreement score $\mathrm{Agr}$ is computed across all judge pairs. Second, if and only if $\mathrm{Agr}$ exceeds a configurable threshold, the quality score $\hat{S}$ is computed and reported. This ordering is deliberate: reporting a quality score when judges strongly disagree would give users a false sense of confidence. By checking agreement first, the framework turns judge disagreement into an actionable routing signal.
 
 \begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{framework.png}}
+\caption{Overview of the Multi-SLMs-as-Judge framework. The question $q$, candidate answer $a$, and rubric $R$ are routed to all judges $\{J_1,\ldots,J_N\}$ in parallel. Pairwise agreement $\mathrm{Agr}$ is computed and compared against user-configurable thresholds $\theta_{FA}$, $\theta_{MA}$, $\theta_{SP}$ to determine whether the quality score $\hat{S}$ is reported (Full/Majority Agreement) or the case is escalated to human review (Split/Full Disagree).}
+\label{fig:framework}
+\end{figure}
+
+\begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{fig_exp4_agreement_by_rubric.png}}
 \caption{Mean pairwise agreement ($\mathrm{Agr}$) by rubric across 1,000 clinical questions. Binary rubrics (PEMAT, HealthBench) and Likert rubrics distribute agreement differently across the five clinical domains.}
 \label{fig:exp4_rubric}
